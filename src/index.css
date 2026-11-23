@@ -4,3 +4,32 @@
 body {
   @apply bg-gray-100 text-gray-900 flex justify-center items-center h-screen;
 }
+
+.wa-page {
+  background: #d9dbd5;
+}
+
+.wa-window {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+.wa-sidebar-header,
+.wa-chat-header {
+  background: #075e54;
+  color: white;
+}
+
+.wa-chat-bg {
+  background-color: #efeae2;
+  background-image: radial-gradient(rgba(125, 112, 95, 0.13) 1px, transparent 1px), radial-gradient(rgba(125, 112, 95, 0.1) 1px, transparent 1px);
+  background-position: 0 0, 12px 12px;
+  background-size: 24px 24px;
+}
+
+.wa-bubble-sent {
+  background: #d9fdd3;
+}
+
+.wa-bubble-received {
+  background: #ffffff;
+}
