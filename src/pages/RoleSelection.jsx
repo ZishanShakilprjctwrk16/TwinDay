@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import LogoutButton from "../components/LogoutButton";
 
 const roles = [
   { id: "student", icon: "🎓" },
@@ -18,7 +19,8 @@ export default function RoleSelection() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-blue-100">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-blue-100 p-6">
+      <div className="w-full max-w-xl flex justify-end mb-4"><LogoutButton /></div>
       <h1 className="text-3xl font-bold mb-8 text-blue-700">{t("selectRole")}</h1>
       <div className="grid grid-cols-2 gap-6">
         {roles.map((role) => (

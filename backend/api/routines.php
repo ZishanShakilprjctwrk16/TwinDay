@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $statement = $pdo->prepare(
         'SELECT r.id, r.name, r.content, r.timezone, r.active, r.created_at,
                 rt.id AS task_id, rt.title AS task_title, rt.notes AS task_notes,
-                rt.due_time, rt.recurrence_rule, rt.active AS task_active
+                rt.due_time, rt.recurrence_rule, rt.active AS task_active, rt.completed_at
          FROM routines r LEFT JOIN routine_tasks rt ON rt.routine_id = r.id
          WHERE r.user_id = :user_id ORDER BY r.created_at DESC, rt.due_time'
     );
@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'due_time' => $row['due_time'],
                 'recurrence_rule' => $row['recurrence_rule'],
                 'active' => (bool) $row['task_active'],
+                'completed_at' => $row['completed_at'],
             ];
         }
     }
@@ -92,6 +93,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     if (!$routineId) jsonResponse(['error' => 'A valid routine id is required.'], 422);
     $statement = $pdo->prepare('DELETE FROM routines WHERE id = :id AND user_id = :user_id');
     $statement->execute(['id' => $routineId, 'user_id' => $userId]);
+    jsonResponse(['ok' => true]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $taskId = filter_var($input['task_id'] ?? null, FILTER_VALIDATE_INT);
+    if (!$taskId || !array_key_exists('completed', $input)) {
+        jsonResponse(['error' => 'A valid task id and completed value are required.'], 422);
+    }
+    $completed = filter_var($input['completed'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    if ($completed === null) jsonResponse(['error' => 'Completed must be true or false.'], 422);
+    $statement = $pdo->prepare(
+        'UPDATE routine_tasks rt JOIN routines r ON r.id = rt.routine_id
+         SET rt.completed_at = :completed_at
+         WHERE rt.id = :task_id AND r.user_id = :user_id'
+    );
+    $statement->execute([
+        'completed_at' => $completed ? date('Y-m-d H:i:s') : null,
+        'task_id' => $taskId,
+        'user_id' => $userId,
+    ]);
     jsonResponse(['ok' => true]);
 }
 
