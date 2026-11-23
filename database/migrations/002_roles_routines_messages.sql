@@ -81,6 +81,10 @@ CREATE TABLE IF NOT EXISTS messages (
   recipient_id INT UNSIGNED NOT NULL,
   subject VARCHAR(200) NULL,
   body TEXT NOT NULL,
+  attachment_name VARCHAR(255) NULL,
+  attachment_path VARCHAR(255) NULL,
+  attachment_type VARCHAR(100) NULL,
+  attachment_size INT UNSIGNED NULL,
   read_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -91,3 +95,9 @@ CREATE TABLE IF NOT EXISTS messages (
   CONSTRAINT fk_messages_recipient FOREIGN KEY (recipient_id) REFERENCES users(id)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+ALTER TABLE messages
+  ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255) NULL AFTER body,
+  ADD COLUMN IF NOT EXISTS attachment_path VARCHAR(255) NULL AFTER attachment_name,
+  ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(100) NULL AFTER attachment_path,
+  ADD COLUMN IF NOT EXISTS attachment_size INT UNSIGNED NULL AFTER attachment_type;
