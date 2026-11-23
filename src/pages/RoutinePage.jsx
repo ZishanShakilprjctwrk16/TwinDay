@@ -4,6 +4,7 @@ import { Mic, Save, Home } from "lucide-react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { useNavigate } from "react-router-dom";
 import { getUserStorageKey, readJson, writeJson } from "../utils/storage";
+import LogoutButton from "../components/LogoutButton";
 
 export default function RoutinePage() {
   const { i18n } = useTranslation();
@@ -45,13 +46,16 @@ export default function RoutinePage() {
           <Home size={20} className="mr-2" />
           {i18n.language === "bn" ? "হোমে ফিরে যান" : "Back Home"}
         </button>
-        <button
-          onClick={saveRoutine}
-          className="flex items-center bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700"
-        >
-          <Save size={20} className="mr-2" />
-          {i18n.language === "bn" ? "সংরক্ষণ করুন" : "Save Routine"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={saveRoutine}
+            className="flex items-center bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700"
+          >
+            <Save size={20} className="mr-2" />
+            {i18n.language === "bn" ? "সংরক্ষণ করুন" : "Save Routine"}
+          </button>
+          <LogoutButton />
+        </div>
       </div>
 
       <h1 className="text-3xl font-bold mt-6 text-green-900">

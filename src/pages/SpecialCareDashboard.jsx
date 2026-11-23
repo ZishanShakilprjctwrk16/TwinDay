@@ -4,6 +4,7 @@ import { Mic, StopCircle, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getUserStorageKey, readJson, writeJson } from "../utils/storage";
+import LogoutButton from "../components/LogoutButton";
 
 export default function SpecialCareDashboard() {
   const { i18n } = useTranslation();
@@ -49,9 +50,12 @@ export default function SpecialCareDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-4 text-indigo-800">
-        {i18n.language === "bn" ? "বিশেষ যত্ন সহকারী" : "Special Care Assistant"}
-      </h1>
+      <div className="flex items-center gap-4 mb-4">
+        <h1 className="text-3xl font-bold text-indigo-800">
+          {i18n.language === "bn" ? "বিশেষ যত্ন সহকারী" : "Special Care Assistant"}
+        </h1>
+        <LogoutButton />
+      </div>
 
       <p className="text-lg text-gray-700 mb-6 text-center max-w-2xl">
         {i18n.language === "bn"

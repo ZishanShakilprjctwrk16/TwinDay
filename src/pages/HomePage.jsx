@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { getUser } from "../utils/storage";
+import LogoutButton from "../components/LogoutButton";
 
 export default function HomePage() {
   const { t, i18n } = useTranslation();
@@ -28,12 +29,15 @@ export default function HomePage() {
           ? `Your selected role: ${role}`
           : `আপনার নির্বাচিত ভূমিকা: ${t(role)}`}
       </p>
-      <button
-        onClick={() => navigate(role === "specialCare" ? "/special-care" : "/routine")}
-        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-      >
-        Go to Dashboard
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={() => navigate(role === "specialCare" ? "/special-care" : "/routine")}
+          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+        >
+          Go to Dashboard
+        </button>
+        <LogoutButton />
+      </div>
     </div>
   );
 }
