@@ -7,6 +7,7 @@ export default function ReminderWatcher() {
   const alerted = useRef(new Set());
 
   useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
     const checkReminders = async () => {
       const response = await fetch(endpoint, { headers: { "X-Auth-Token": getToken() } });
       if (!response.ok) return;
@@ -16,7 +17,11 @@ export default function ReminderWatcher() {
         const dueAt = Date.parse(reminder.remind_at.replace(" ", "T"));
         if (reminder.status === "pending" && dueAt <= now && !alerted.current.has(reminder.id)) {
           alerted.current.add(reminder.id);
-          window.alert(`Reminder: ${reminder.text}`);
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("TwinDay reminder", { body: reminder.text });
+          } else {
+            window.alert(`Reminder: ${reminder.text}`);
+          }
           await fetch(endpoint, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", "X-Auth-Token": getToken() },

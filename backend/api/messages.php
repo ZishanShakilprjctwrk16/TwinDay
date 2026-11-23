@@ -10,6 +10,8 @@ $userId = (int) $user['id'];
 $isAdmin = in_array('super_admin', $user['roles'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $markRead = $pdo->prepare('UPDATE messages SET read_at = NOW() WHERE recipient_id = :recipient_id AND read_at IS NULL');
+    $markRead->execute(['recipient_id' => $userId]);
     $statement = $pdo->prepare(
         'SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, m.read_at, m.created_at,
                 s.name AS sender_name, r.name AS recipient_name

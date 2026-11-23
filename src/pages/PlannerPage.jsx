@@ -12,6 +12,7 @@ export default function PlannerPage() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState([]);
   const [reminders, setReminders] = useState([]);
+  const [editingRoutineId, setEditingRoutineId] = useState(null);
   const [form, setForm] = useState({ name: "Daily routine", content: "", taskTitle: "", dueTime: "", recurrence: "daily", remindAt: "" });
   const [error, setError] = useState("");
 
@@ -31,7 +32,7 @@ export default function PlannerPage() {
     event.preventDefault();
     setError("");
     try {
-      const routineResponse = await fetch(routineEndpoint, { method: "POST", headers: headers(), body: JSON.stringify({ name: form.name, content: form.content, tasks: form.taskTitle ? [{ title: form.taskTitle, due_time: form.dueTime, recurrence_rule: form.recurrence }] : [] }) });
+      const routineResponse = await fetch(routineEndpoint, { method: editingRoutineId ? "PATCH" : "POST", headers: headers(), body: JSON.stringify(editingRoutineId ? { routine_id: editingRoutineId, name: form.name, content: form.content } : { name: form.name, content: form.content, tasks: form.taskTitle ? [{ title: form.taskTitle, due_time: form.dueTime, recurrence_rule: form.recurrence }] : [] }) });
       const routineResult = await routineResponse.json();
       if (!routineResponse.ok) throw new Error(routineResult.error || "Unable to save routine.");
       if (form.remindAt && form.taskTitle && routineResult.task_ids?.[0]) {
@@ -40,6 +41,7 @@ export default function PlannerPage() {
         if (!reminderResponse.ok) throw new Error(reminderResult.error || "Routine saved, but reminder creation failed.");
       }
       setForm({ name: "Daily routine", content: "", taskTitle: "", dueTime: "", recurrence: "daily", remindAt: "" });
+      setEditingRoutineId(null);
       await loadData();
     } catch (saveError) { setError(saveError.message); }
   };
@@ -67,7 +69,7 @@ export default function PlannerPage() {
   };
 
   return <div className="min-h-screen bg-green-50 p-6"><ReminderWatcher /><div className="max-w-5xl mx-auto">
-    <div className="flex justify-between items-center mb-6"><div><h1 className="text-3xl font-bold text-green-900">Routine Planner</h1><p className="text-green-800">Create tasks and schedule reminders from your routine.</p></div><div className="flex gap-2"><button onClick={() => navigate("/messages")} className="bg-indigo-600 text-white px-4 py-2 rounded-md">Messages</button><LogoutButton /></div></div>
+    <div className="flex justify-between items-center mb-6"><div><h1 className="text-3xl font-bold text-green-900">Routine Planner</h1><p className="text-green-800">Create tasks and schedule reminders from your routine.</p></div><div className="flex gap-2"><button onClick={() => navigate("/messages")} className="bg-indigo-600 text-white px-4 py-2 rounded-md">Messages</button><button onClick={() => navigate("/account")} className="bg-slate-700 text-white px-4 py-2 rounded-md">Account</button><LogoutButton /></div></div>
     {error && <p className="bg-red-100 text-red-700 p-3 rounded-md mb-4">{error}</p>}
     <form onSubmit={saveRoutine} className="bg-white rounded-xl shadow p-5 grid gap-3"><h2 className="text-xl font-semibold">Add routine</h2><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Routine name" className="border rounded px-3 py-2" required /><textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Describe your routine" className="border rounded px-3 py-2" required /><div className="grid md:grid-cols-4 gap-3"><input value={form.taskTitle} onChange={(e) => setForm({ ...form, taskTitle: e.target.value })} placeholder="Task title" className="border rounded px-3 py-2" /><input type="time" value={form.dueTime} onChange={(e) => setForm({ ...form, dueTime: e.target.value })} className="border rounded px-3 py-2" /><select value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value })} className="border rounded px-3 py-2"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="once">Once</option></select><input type="datetime-local" value={form.remindAt} onChange={(e) => setForm({ ...form, remindAt: e.target.value })} className="border rounded px-3 py-2" /></div><button className="bg-green-600 text-white rounded px-4 py-2 w-fit">Save routine</button></form>
     <div className="grid md:grid-cols-2 gap-5 mt-6"><section className="bg-white rounded-xl shadow p-5"><h2 className="text-xl font-semibold mb-3">Your routines</h2>{routines.length === 0 ? <p className="text-gray-500">No routines yet.</p> : routines.map((routine) => <article key={routine.id} className="border-b py-3"><div className="flex justify-between gap-3"><div><h3 className="font-semibold">{routine.name}</h3><p className="text-gray-600">{routine.content}</p></div><button onClick={() => deleteRoutine(routine.id).catch((deleteError) => setError(deleteError.message))} className="text-sm text-red-700 underline">Delete</button></div>{routine.tasks.map((task) => <label key={task.id} className="flex items-center gap-2 text-sm text-green-800 mt-2"><input type="checkbox" checked={Boolean(task.completed_at)} onChange={(event) => toggleTask(task.id, event.target.checked).catch((taskError) => setError(taskError.message))} /><span className={task.completed_at ? "line-through text-gray-500" : ""}>• {task.title} {task.due_time ? `at ${task.due_time}` : ""} ({task.recurrence_rule || "once"})</span></label>)}</article>)}</section><section className="bg-white rounded-xl shadow p-5"><h2 className="text-xl font-semibold mb-3">Reminders</h2>{reminders.length === 0 ? <p className="text-gray-500">No reminders yet.</p> : reminders.map((reminder) => <article key={reminder.id} className="border-b py-3 flex justify-between gap-3"><div><p className="font-medium">{reminder.text}</p><p className="text-sm text-gray-600">{reminder.remind_at} · {reminder.status}</p></div>{reminder.status === "pending" && <button onClick={() => dismissReminder(reminder.id).catch((dismissError) => setError(dismissError.message))} className="text-sm text-red-700 underline">Dismiss</button>}</article>)}</section></div>

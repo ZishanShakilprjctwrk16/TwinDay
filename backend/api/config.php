@@ -100,6 +100,6 @@ function requireSuperAdmin(PDO $pdo): array
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
     jsonResponse(['ok' => true]);
 }

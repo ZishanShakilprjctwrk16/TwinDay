@@ -98,6 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     $input = json_decode(file_get_contents('php://input'), true);
+    $routineId = filter_var($input['routine_id'] ?? null, FILTER_VALIDATE_INT);
+    if ($routineId) {
+        $name = trim((string) ($input['name'] ?? ''));
+        $content = trim((string) ($input['content'] ?? ''));
+        if ($name === '' || $content === '') jsonResponse(['error' => 'Routine name and content are required.'], 422);
+        $statement = $pdo->prepare('UPDATE routines SET name=:name, content=:content WHERE id=:id AND user_id=:user_id');
+        $statement->execute(['name' => $name, 'content' => $content, 'id' => $routineId, 'user_id' => $userId]);
+        jsonResponse(['ok' => true]);
+    }
     $taskId = filter_var($input['task_id'] ?? null, FILTER_VALIDATE_INT);
     if (!$taskId || !array_key_exists('completed', $input)) {
         jsonResponse(['error' => 'A valid task id and completed value are required.'], 422);
