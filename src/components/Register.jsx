@@ -44,28 +44,28 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
-            placeholder="Name"
+            placeholder={t("name")}
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("email")}
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
           <input
             type="tel"
-            placeholder="Phone"
+            placeholder={t("phone")}
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             required
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t("password")}
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
@@ -77,14 +77,14 @@ export default function Register() {
             disabled={isSubmitting}
             className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
           >
-            {isSubmitting ? "Creating account..." : t("next")}
+            {isSubmitting ? t("creatingAccount") : t("next")}
           </button>
         </form>
         <div className="mt-4">
           <LanguageToggle />
         </div>
         <button type="button" onClick={() => navigate("/login")} className="mt-3 text-blue-700 underline">
-          Already registered? Login
+          {t("alreadyRegistered")}
         </button>
       </div>
     </div>
