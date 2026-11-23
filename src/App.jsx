@@ -7,6 +7,8 @@ import SpecialCareDashboard from "./pages/SpecialCareDashboard";
 import RoutinePage from "./pages/RoutinePage";
 import Login from "./components/Login";
 import AdminPage from "./pages/AdminPage";
+import PlannerPage from "./pages/PlannerPage";
+import MessagesPage from "./pages/MessagesPage";
 import { getToken } from "./utils/storage";
 import { getUser } from "./utils/storage";
 
@@ -34,7 +36,9 @@ export default function App() {
 
         {/* Special Care Section */}
         <Route path="/special-care" element={<ProtectedRoute specialCareOnly><SpecialCareDashboard /></ProtectedRoute>} />
-        <Route path="/routine" element={<ProtectedRoute><RoutinePage /></ProtectedRoute>} />
+        <Route path="/routine" element={<ProtectedRoute><PlannerPage /></ProtectedRoute>} />
+        <Route path="/voice-routine" element={<ProtectedRoute><RoutinePage /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

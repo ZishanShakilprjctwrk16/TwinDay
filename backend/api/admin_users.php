@@ -14,12 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     $email = strtolower(trim((string) ($input['email'] ?? '')));
     $phone = trim((string) ($input['phone'] ?? ''));
     $status = (string) ($input['status'] ?? 'active');
+    $roles = is_array($input['roles'] ?? null) ? array_values(array_unique($input['roles'])) : null;
 
-    if (!$userId || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || !in_array($status, ['active', 'suspended'], true)) {
+    if (!$userId || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || !in_array($status, ['active', 'suspended'], true) || ($roles !== null && array_diff($roles, ['normal_user', 'super_admin']))) {
         jsonResponse(['error' => 'Valid id, name, email, phone, and status are required.'], 422);
+    }
+    if ((int) $admin['id'] === $userId && $roles !== null && !in_array('super_admin', $roles, true)) {
+        jsonResponse(['error' => 'You cannot remove your own super-admin role.'], 422);
     }
 
     try {
+        $pdo->beginTransaction();
         $statement = $pdo->prepare(
             'UPDATE users SET name = :name, email = :email, phone = :phone, status = :status WHERE id = :id'
         );
@@ -30,8 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
             'phone' => $phone,
             'status' => $status,
         ]);
+        if ($roles !== null) {
+            $pdo->prepare('DELETE FROM user_roles WHERE user_id = :user_id')->execute(['user_id' => $userId]);
+            $roleStatement = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT :user_id, id FROM roles WHERE name = :role');
+            foreach ($roles as $role) $roleStatement->execute(['user_id' => $userId, 'role' => $role]);
+        }
+        $pdo->commit();
         jsonResponse(['ok' => true]);
     } catch (PDOException $exception) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
         if (($exception->errorInfo[1] ?? null) === 1062) {
             jsonResponse(['error' => 'Another account already uses this email.'], 409);
         }

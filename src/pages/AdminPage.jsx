@@ -65,7 +65,7 @@ export default function AdminPage() {
             <thead className="bg-slate-200"><tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Roles</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
             <tbody>{users.map((user) => <tr key={user.id} className="border-t">
               <td className="p-3">{user.name}</td><td className="p-3">{user.email}</td><td className="p-3">{user.phone || "—"}</td><td className="p-3">{user.roles.join(", ") || "—"}</td><td className="p-3">{user.status}</td>
-              <td className="p-3"><div className="flex gap-2"><button onClick={() => setEditingUser({ id: user.id, name: user.name, email: user.email, phone: user.phone || "", status: user.status })} className="text-blue-700 underline">Edit</button><button onClick={() => deleteUser(user.id).catch((deleteError) => setError(deleteError.message))} className="text-red-700 underline">Delete</button></div></td>
+              <td className="p-3"><div className="flex gap-2"><button onClick={() => setEditingUser({ id: user.id, name: user.name, email: user.email, phone: user.phone || "", status: user.status, roles: user.roles })} className="text-blue-700 underline">Edit</button><button onClick={() => deleteUser(user.id).catch((deleteError) => setError(deleteError.message))} className="text-red-700 underline">Delete</button></div></td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -74,6 +74,7 @@ export default function AdminPage() {
           <input value={editingUser.email} onChange={(event) => setEditingUser({ ...editingUser, email: event.target.value })} className="border rounded px-3 py-2" aria-label="Edit email" />
           <input value={editingUser.phone} onChange={(event) => setEditingUser({ ...editingUser, phone: event.target.value })} className="border rounded px-3 py-2" aria-label="Edit phone" />
           <select value={editingUser.status} onChange={(event) => setEditingUser({ ...editingUser, status: event.target.value })} className="border rounded px-3 py-2" aria-label="Edit status"><option value="active">Active</option><option value="suspended">Suspended</option></select>
+          <select value={editingUser.roles.includes("super_admin") ? "super_admin" : "normal_user"} onChange={(event) => setEditingUser({ ...editingUser, roles: [event.target.value] })} className="border rounded px-3 py-2" aria-label="Edit role"><option value="normal_user">Normal user</option><option value="super_admin">Super admin</option></select>
           <div className="flex gap-2"><button type="submit" className="bg-blue-600 text-white rounded px-3 py-2">Save</button><button type="button" onClick={() => setEditingUser(null)} className="bg-gray-200 rounded px-3 py-2">Cancel</button></div>
         </form>}
       </div>
