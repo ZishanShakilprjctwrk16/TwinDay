@@ -7,7 +7,7 @@ import { writeJson } from "../utils/storage";
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,6 +54,13 @@ export default function Register() {
             placeholder="Email"
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+          />
+          <input
+            type="tel"
+            placeholder="Phone"
+            className="border rounded-md px-3 py-2"
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
             required
           />
           <input
