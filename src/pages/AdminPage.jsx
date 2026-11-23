@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
   const [editingUser, setEditingUser] = useState(null);
+  const [newUser, setNewUser] = useState({ name: "", email: "", phone: "", password: "", role: "normal_user" });
 
   const loadUsers = useCallback(async () => {
     const response = await fetch(endpoint, { headers: { "X-Auth-Token": getToken() } });
@@ -36,6 +37,20 @@ export default function AdminPage() {
     await loadUsers();
   };
 
+  const createUser = async (event) => {
+    event.preventDefault();
+    setError("");
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Auth-Token": getToken() },
+      body: JSON.stringify(newUser),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Unable to create the user.");
+    setNewUser({ name: "", email: "", phone: "", password: "", role: "normal_user" });
+    await loadUsers();
+  };
+
   const deleteUser = async (userId) => {
     if (!window.confirm("Delete this user and all of their routines, reminders, and messages?")) return;
     setError("");
@@ -57,9 +72,10 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-slate-800">Super Admin Dashboard</h1>
             <p className="text-slate-600">View and manage registered users and their roles.</p>
           </div>
-          <div className="flex gap-2"><button onClick={() => navigate("/home")} className="bg-blue-600 text-white px-4 py-2 rounded-md">User Home</button><LogoutButton /></div>
+          <div className="flex gap-2"><button onClick={() => navigate("/messages")} className="bg-indigo-600 text-white px-4 py-2 rounded-md">Messages</button><button onClick={() => navigate("/home")} className="bg-blue-600 text-white px-4 py-2 rounded-md">User Home</button><LogoutButton /></div>
         </div>
         {error && <p className="bg-red-100 text-red-700 p-3 rounded-md mb-4">{error}</p>}
+        <form onSubmit={(event) => createUser(event).catch((createError) => setError(createError.message))} className="bg-white rounded-xl shadow p-4 mb-6 grid gap-3 md:grid-cols-6"><h2 className="md:col-span-6 text-xl font-semibold">Add account</h2><input value={newUser.name} onChange={(event) => setNewUser({ ...newUser, name: event.target.value })} placeholder="Name" className="border rounded px-3 py-2" required /><input type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} placeholder="Email" className="border rounded px-3 py-2" required /><input value={newUser.phone} onChange={(event) => setNewUser({ ...newUser, phone: event.target.value })} placeholder="Phone" className="border rounded px-3 py-2" required /><input type="password" minLength={8} value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} placeholder="Password" className="border rounded px-3 py-2" required /><select value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value })} className="border rounded px-3 py-2"><option value="normal_user">Normal user</option><option value="super_admin">Super admin</option></select><button className="bg-green-600 text-white rounded px-3 py-2">Add account</button></form>
         <div className="bg-white rounded-xl shadow overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-200"><tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Roles</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>

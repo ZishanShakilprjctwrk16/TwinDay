@@ -7,6 +7,34 @@ require_once __DIR__ . '/config.php';
 $pdo = database();
 $admin = requireSuperAdmin($pdo);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $name = trim((string) ($input['name'] ?? ''));
+    $email = strtolower(trim((string) ($input['email'] ?? '')));
+    $phone = trim((string) ($input['phone'] ?? ''));
+    $password = (string) ($input['password'] ?? '');
+    $role = (string) ($input['role'] ?? 'normal_user');
+
+    if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || strlen($password) < 8 || !in_array($role, ['normal_user', 'super_admin'], true)) {
+        jsonResponse(['error' => 'Name, valid email, phone, 8+ character password, and valid role are required.'], 422);
+    }
+
+    try {
+        $pdo->beginTransaction();
+        $statement = $pdo->prepare('INSERT INTO users (name, email, phone, password_hash) VALUES (:name, :email, :phone, :password_hash)');
+        $statement->execute(['name' => $name, 'email' => $email, 'phone' => $phone, 'password_hash' => password_hash($password, PASSWORD_DEFAULT)]);
+        $userId = (int) $pdo->lastInsertId();
+        $roleStatement = $pdo->prepare('INSERT INTO user_roles (user_id, role_id) SELECT :user_id, id FROM roles WHERE name = :role');
+        $roleStatement->execute(['user_id' => $userId, 'role' => $role]);
+        $pdo->commit();
+        jsonResponse(['id' => $userId], 201);
+    } catch (PDOException $exception) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        if (($exception->errorInfo[1] ?? null) === 1062) jsonResponse(['error' => 'An account with this email already exists.'], 409);
+        jsonResponse(['error' => 'Unable to create the user.'], 500);
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'PATCH') {
     $input = json_decode(file_get_contents('php://input'), true);
     $userId = filter_var($input['id'] ?? null, FILTER_VALIDATE_INT);
