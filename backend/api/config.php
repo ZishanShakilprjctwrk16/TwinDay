@@ -34,12 +34,72 @@ function jsonResponse(array $payload, int $status = 200): never
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: http://127.0.0.1:5173');
-    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+function issueToken(PDO $pdo, int $userId): string
+{
+    $token = bin2hex(random_bytes(32));
+    $statement = $pdo->prepare(
+        'INSERT INTO auth_tokens (user_id, token_hash, expires_at)
+         VALUES (:user_id, :token_hash, DATE_ADD(NOW(), INTERVAL 7 DAY))'
+    );
+    $statement->execute([
+        'user_id' => $userId,
+        'token_hash' => hash('sha256', $token),
+    ]);
+
+    return $token;
+}
+
+function authenticatedUser(PDO $pdo): array
+{
+    $token = $_SERVER['HTTP_X_AUTH_TOKEN'] ?? '';
+    $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if ($token === '' && preg_match('/^Bearer\s+(.+)$/i', $authorization, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token === '') {
+        jsonResponse(['error' => 'Authentication required.'], 401);
+    }
+
+    $statement = $pdo->prepare(
+        'SELECT u.id, u.name, u.email, u.phone, u.status,
+                GROUP_CONCAT(r.name) AS roles
+         FROM auth_tokens t
+         JOIN users u ON u.id = t.user_id
+         LEFT JOIN user_roles ur ON ur.user_id = u.id
+         LEFT JOIN roles r ON r.id = ur.role_id
+         WHERE t.token_hash = :token_hash
+           AND t.expires_at > NOW()
+           AND u.status = \'active\'
+         GROUP BY u.id'
+    );
+    $statement->execute(['token_hash' => hash('sha256', $token)]);
+    $user = $statement->fetch();
+
+    if (!$user) {
+        jsonResponse(['error' => 'Invalid or expired authentication token.'], 401);
+    }
+
+    $user['roles'] = $user['roles'] ? explode(',', $user['roles']) : [];
+    return $user;
+}
+
+function requireSuperAdmin(PDO $pdo): array
+{
+    $user = authenticatedUser($pdo);
+    if (!in_array('super_admin', $user['roles'], true)) {
+        jsonResponse(['error' => 'Super-admin access required.'], 403);
+    }
+
+    return $user;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     jsonResponse(['ok' => true]);
 }

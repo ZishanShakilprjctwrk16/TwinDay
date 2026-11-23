@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { clearSession } from "../utils/storage";
 
 export default function LogoutButton() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
+    clearSession();
     navigate("/", { replace: true });
   };
 

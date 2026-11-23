@@ -22,6 +22,20 @@ CREATE TABLE IF NOT EXISTS user_roles (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS auth_tokens (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  token_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_auth_tokens_hash (token_hash),
+  KEY idx_auth_tokens_user_id (user_id),
+  KEY idx_auth_tokens_expires_at (expires_at),
+  CONSTRAINT fk_auth_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
 INSERT IGNORE INTO roles (name) VALUES ('normal_user'), ('super_admin');
 
 INSERT INTO user_roles (user_id, role_id)

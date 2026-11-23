@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "./LanguageToggle";
-import { writeJson } from "../utils/storage";
+import { writeSession } from "../utils/storage";
 
 export default function Register() {
   const { t } = useTranslation();
@@ -28,7 +28,7 @@ export default function Register() {
         throw new Error(result.error || "Unable to create the account.");
       }
 
-      writeJson("user", result.user);
+      writeSession(result.user, result.token);
       navigate("/roles");
     } catch (submitError) {
       setError(submitError.message || "Unable to connect to the database.");
@@ -83,6 +83,9 @@ export default function Register() {
         <div className="mt-4">
           <LanguageToggle />
         </div>
+        <button type="button" onClick={() => navigate("/login")} className="mt-3 text-blue-700 underline">
+          Already registered? Login
+        </button>
       </div>
     </div>
   );

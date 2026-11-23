@@ -40,14 +40,17 @@ try {
          SELECT :user_id, id FROM roles WHERE name = \'normal_user\''
     );
     $roleStatement->execute(['user_id' => $userId]);
+    $token = issueToken($pdo, $userId);
     $pdo->commit();
 
     jsonResponse([
+        'token' => $token,
         'user' => [
             'id' => $userId,
             'name' => $name,
             'email' => $email,
             'phone' => $phone,
+            'roles' => ['normal_user'],
         ],
     ], 201);
 } catch (PDOException $exception) {
