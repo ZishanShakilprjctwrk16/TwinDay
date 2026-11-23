@@ -8,11 +8,33 @@ export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    writeJson("user", { name: form.name.trim(), email: form.email.trim().toLowerCase() });
-    navigate("/roles");
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1/twinday-api/api/register.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to create the account.");
+      }
+
+      writeJson("user", result.user);
+      navigate("/roles");
+    } catch (submitError) {
+      setError(submitError.message || "Unable to connect to the database.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -40,9 +62,15 @@ export default function Register() {
             className="border rounded-md px-3 py-2"
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
+            minLength={8}
           />
-          <button className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-            {t("next")}
+          {error && <p className="text-red-600 text-sm" role="alert">{error}</p>}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
+          >
+            {isSubmitting ? "Creating account..." : t("next")}
           </button>
         </form>
         <div className="mt-4">

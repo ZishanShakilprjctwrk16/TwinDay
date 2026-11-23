@@ -1,0 +1,8 @@
+# TwinDay XAMPP backend
+
+1. Import `../database/schema.sql` in phpMyAdmin or with the XAMPP MariaDB client.
+2. Copy this `backend` folder to `C:\xampp\htdocs\twinday-api`.
+3. Confirm Apache and MySQL/MariaDB are running in XAMPP.
+4. The registration endpoint will be available at `http://127.0.0.1/twinday-api/api/register.php`.
+
+The default configuration expects XAMPP's local `root` user with an empty password. Change `api/config.php` if your MariaDB credentials differ.
