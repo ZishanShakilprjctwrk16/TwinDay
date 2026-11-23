@@ -12,14 +12,14 @@ import MessagesPage from "./pages/MessagesPage";
 import { getToken } from "./utils/storage";
 import { getUser } from "./utils/storage";
 
-function ProtectedRoute({ children, specialCareOnly = false, adminOnly = false }) {
+function ProtectedRoute({ children, specialCareOnly = false, adminOnly = false, allowRoleSelection = false }) {
   const user = getUser();
   const role = localStorage.getItem("role");
   const roles = user?.roles || [];
 
   if (!user || !getToken()) return <Navigate to="/" replace />;
   if (adminOnly && !roles.includes("super_admin")) return <Navigate to="/home" replace />;
-  if (!adminOnly && !role && !roles.includes("super_admin")) return <Navigate to="/roles" replace />;
+  if (!allowRoleSelection && !adminOnly && !role && !roles.includes("super_admin")) return <Navigate to="/roles" replace />;
   if (specialCareOnly && role !== "specialCare") return <Navigate to="/home" replace />;
   return children;
 }
@@ -31,7 +31,7 @@ export default function App() {
         {/* Registration Flow */}
         <Route path="/" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/roles" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
+        <Route path="/roles" element={<ProtectedRoute allowRoleSelection><RoleSelection /></ProtectedRoute>} />
         <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
 
         {/* Special Care Section */}
