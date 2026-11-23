@@ -6,30 +6,52 @@ body {
 }
 
 .wa-page {
-  background: #d9dbd5;
+  background: #17181b;
+  color: #f1f3f4;
 }
 
 .wa-window {
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  background: #242529;
 }
 
 .wa-sidebar-header,
 .wa-chat-header {
-  background: #075e54;
+  background: #303136;
   color: white;
 }
 
 .wa-chat-bg {
-  background-color: #efeae2;
-  background-image: radial-gradient(rgba(125, 112, 95, 0.13) 1px, transparent 1px), radial-gradient(rgba(125, 112, 95, 0.1) 1px, transparent 1px);
+  background-color: #1f2023;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px), radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-position: 0 0, 12px 12px;
   background-size: 24px 24px;
 }
 
 .wa-bubble-sent {
-  background: #d9fdd3;
+  background: #3b4a40;
+  color: #f1f3f4;
 }
 
 .wa-bubble-received {
-  background: #ffffff;
+  background: #2e3035;
+  color: #f1f3f4;
 }
+
+.wa-page .text-slate-800 { color: #f1f3f4 !important; }
+.wa-page .text-slate-600 { color: #c4c7cb !important; }
+.wa-page .text-slate-500 { color: #a7abb1 !important; }
+.wa-page .border-slate-200,
+.wa-page .border-slate-100 { border-color: #3b3d43 !important; }
+.wa-page aside { background: #242529; }
+.wa-page aside button:hover,
+.wa-page aside button.bg-emerald-50 { background: #34363c !important; }
+.wa-page .wa-bubble-sent .text-slate-500,
+.wa-page .wa-bubble-received .text-slate-500 { color: #aeb3b8 !important; }
+.wa-page .wa-bubble-sent .text-emerald-700,
+.wa-page .wa-bubble-received .text-emerald-700 { color: #76d7b0 !important; }
+.wa-page .bg-white { background-color: #2e3035 !important; }
+.wa-page .bg-slate-100 { background-color: #34363c !important; color: #f1f3f4; }
+.wa-page .bg-slate-100::placeholder { color: #a7abb1; }
+.wa-page .bg-white\/70 { background-color: rgba(52, 54, 60, 0.88) !important; }
+.wa-page .bg-\[\#f0f2f5\] { background-color: #242529 !important; border-color: #3b3d43 !important; }
