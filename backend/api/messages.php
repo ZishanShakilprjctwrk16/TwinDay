@@ -10,8 +10,14 @@ $userId = (int) $user['id'];
 $publicUploadBase = 'http://127.0.0.1/twinday-api/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $markRead = $pdo->prepare('UPDATE messages SET read_at = NOW() WHERE recipient_id = :recipient_id AND read_at IS NULL');
-    $markRead->execute(['recipient_id' => $userId]);
+    $markRead = filter_var($_GET['mark_read'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    $unreadStatement = $pdo->prepare('SELECT COUNT(*) FROM messages WHERE recipient_id = :recipient_id AND read_at IS NULL');
+    $unreadStatement->execute(['recipient_id' => $userId]);
+    $unreadCount = (int) $unreadStatement->fetchColumn();
+    if ($markRead) {
+        $markReadStatement = $pdo->prepare('UPDATE messages SET read_at = NOW() WHERE recipient_id = :recipient_id AND read_at IS NULL');
+        $markReadStatement->execute(['recipient_id' => $userId]);
+    }
     $statement = $pdo->prepare(
         'SELECT m.id, m.sender_id, m.recipient_id, m.subject, m.body, m.attachment_name, m.attachment_path,
                 m.attachment_type, m.attachment_size, m.read_at, m.created_at,
@@ -27,13 +33,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     unset($message);
     $contactStatement = $pdo->prepare(
-        'SELECT id, name, email FROM users
-         WHERE status = \'active\' AND id <> :user_id
-         ORDER BY name'
+        'SELECT u.id, u.name, u.email FROM users u
+         WHERE u.status = \'active\' AND u.id <> :user_id
+           AND EXISTS (SELECT 1 FROM messages m WHERE (m.sender_id = :sender_id AND m.recipient_id = u.id) OR (m.recipient_id = :recipient_id AND m.sender_id = u.id))
+         ORDER BY u.name'
     );
-    $contactStatement->execute(['user_id' => $userId]);
+    $contactStatement->execute(['user_id' => $userId, 'sender_id' => $userId, 'recipient_id' => $userId]);
     $contacts = $contactStatement->fetchAll();
-    jsonResponse(['messages' => $messages, 'contacts' => $contacts]);
+    $search = trim((string) ($_GET['search'] ?? ''));
+    $searchResults = [];
+    if (strlen($search) >= 2) {
+        $searchStatement = $pdo->prepare('SELECT id, name, email FROM users WHERE status = \'active\' AND id <> :user_id AND (name LIKE :name_search OR email LIKE :email_search) ORDER BY name LIMIT 20');
+        $searchPattern = '%' . $search . '%';
+        $searchStatement->execute(['user_id' => $userId, 'name_search' => $searchPattern, 'email_search' => $searchPattern]);
+        $searchResults = $searchStatement->fetchAll();
+    }
+    jsonResponse(['messages' => $messages, 'contacts' => $contacts, 'search_results' => $searchResults, 'unread_count' => $unreadCount]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
