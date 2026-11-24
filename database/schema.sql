@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(30) NULL,
   password_hash VARCHAR(255) NOT NULL,
   status ENUM('active', 'suspended') NOT NULL DEFAULT 'active',
+  preferred_role ENUM('student', 'employee', 'business', 'specialCare', 'caregiver') NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

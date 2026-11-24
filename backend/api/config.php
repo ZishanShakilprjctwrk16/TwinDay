@@ -67,7 +67,7 @@ function authenticatedUser(PDO $pdo): array
     }
 
     $statement = $pdo->prepare(
-        'SELECT u.id, u.name, u.email, u.phone, u.status,
+        'SELECT u.id, u.name, u.email, u.phone, u.status, u.preferred_role,
                 GROUP_CONCAT(r.name) AS roles
          FROM auth_tokens t
          JOIN users u ON u.id = t.user_id

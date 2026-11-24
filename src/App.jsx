@@ -10,6 +10,7 @@ import AdminPage from "./pages/AdminPage";
 import PlannerPage from "./pages/PlannerPage";
 import MessagesPage from "./pages/MessagesPage";
 import AccountPage from "./pages/AccountPage";
+import CaregiverPage from "./pages/CaregiverPage";
 import { getToken } from "./utils/storage";
 import { getUser } from "./utils/storage";
 
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/voice-routine" element={<ProtectedRoute><RoutinePage /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path="/caregiver" element={<ProtectedRoute><CaregiverPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

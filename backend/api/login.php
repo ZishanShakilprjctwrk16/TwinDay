@@ -38,6 +38,7 @@ jsonResponse([
         'name' => $account['name'],
         'email' => $account['email'],
         'phone' => $account['phone'],
+        'preferred_role' => $account['preferred_role'] ?? null,
         'roles' => $roles,
     ],
 ]);

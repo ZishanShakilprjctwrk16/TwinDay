@@ -7,7 +7,6 @@ require_once __DIR__ . '/config.php';
 $pdo = database();
 $user = authenticatedUser($pdo);
 $userId = (int) $user['id'];
-$isAdmin = in_array('super_admin', $user['roles'], true);
 $publicUploadBase = 'http://127.0.0.1/twinday-api/';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -27,10 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $message['attachment_url'] = $message['attachment_path'] ? $publicUploadBase . $message['attachment_path'] : null;
     }
     unset($message);
-    $contactQuery = $isAdmin
-        ? 'SELECT u.id, u.name, u.email FROM users u JOIN user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE r.name=\'normal_user\' AND u.status=\'active\' ORDER BY u.name'
-        : 'SELECT DISTINCT u.id, u.name, u.email FROM users u JOIN user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE r.name=\'super_admin\' AND u.status=\'active\' ORDER BY u.name';
-    $contacts = $pdo->query($contactQuery)->fetchAll();
+    $contactStatement = $pdo->prepare(
+        'SELECT id, name, email FROM users
+         WHERE status = \'active\' AND id <> :user_id
+         ORDER BY name'
+    );
+    $contactStatement->execute(['user_id' => $userId]);
+    $contacts = $contactStatement->fetchAll();
     jsonResponse(['messages' => $messages, 'contacts' => $contacts]);
 }
 
@@ -44,12 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$recipientId || ($body === '' && !$file)) jsonResponse(['error' => 'Recipient and message text or attachment are required.'], 422);
 
     $recipientCheck = $pdo->prepare(
-        'SELECT u.id, EXISTS(SELECT 1 FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=u.id AND r.name=\'super_admin\') AS is_admin
-         FROM users u WHERE u.id = :id AND u.status=\'active\''
+        'SELECT id FROM users WHERE id = :id AND status = \'active\''
     );
     $recipientCheck->execute(['id' => $recipientId]);
     $recipient = $recipientCheck->fetch();
-    if (!$recipient || (!$isAdmin && !(bool) $recipient['is_admin'])) jsonResponse(['error' => 'You may only message an active super admin.'], 403);
+    if (!$recipient || (int) $recipient['id'] === $userId) jsonResponse(['error' => 'You may only message another active user.'], 403);
 
     $attachment = ['name' => null, 'path' => null, 'type' => null, 'size' => null];
     if ($file) {

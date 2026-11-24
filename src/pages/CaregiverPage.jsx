@@ -1,0 +1,34 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import LogoutButton from "../components/LogoutButton";
+import { getToken, getUser } from "../utils/storage";
+
+const endpoint = "http://127.0.0.1/twinday-api/api/caregiver.php";
+const request = (options = {}) => fetch(endpoint, { ...options, headers: { "Content-Type": "application/json", "X-Auth-Token": getToken(), ...(options.headers || {}) } });
+
+export default function CaregiverPage() {
+  const navigate = useNavigate();
+  const user = getUser() || {};
+  const [relationships, setRelationships] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
+  const [selectedId, setSelectedId] = useState("");
+  const [email, setEmail] = useState("");
+  const [permission, setPermission] = useState("viewer");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const load = useCallback(async (dependentId = selectedId) => {
+    const url = dependentId ? `${endpoint}?dependent_id=${encodeURIComponent(dependentId)}` : endpoint;
+    const response = await fetch(url, { headers: { "X-Auth-Token": getToken() } });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Unable to load caregiver connections.");
+    setRelationships(result.relationships); setDashboard(dependentId ? result.dashboard : null);
+  }, [selectedId]);
+  useEffect(() => { load().catch((loadError) => setError(loadError.message)); }, [load]);
+  const activeDependents = useMemo(() => relationships.filter((link) => link.status === "active" && String(link.owner_id) !== String(user.id)), [relationships, user.id]);
+  const pending = relationships.filter((link) => link.status === "pending" && String(link.caregiver_id) === String(user.id));
+  const invite = async (event) => { event.preventDefault(); setError(""); setMessage(""); const response = await request({ method: "POST", body: JSON.stringify({ email, permission }) }); const result = await response.json(); if (!response.ok) { setError(result.error || "Unable to send invitation."); return; } setEmail(""); setMessage("Invitation sent."); await load(); };
+  const accept = async (id) => { await request({ method: "POST", body: JSON.stringify({ action: "accept", id }) }); await load(); };
+  const selectDependent = async (id) => { setSelectedId(String(id)); try { const response = await fetch(`${endpoint}?dependent_id=${encodeURIComponent(id)}`, { headers: { "X-Auth-Token": getToken() } }); const result = await response.json(); if (!response.ok) throw new Error(result.error); setDashboard(result.dashboard); } catch (loadError) { setError(loadError.message); } };
+  return <div className="min-h-screen bg-indigo-50 p-6"><div className="max-w-6xl mx-auto"><div className="flex flex-wrap justify-between gap-3 items-center mb-6"><div><h1 className="text-3xl font-bold text-indigo-900">Caregiver dashboard</h1><p className="text-indigo-700">Support a loved one’s routines and reminders.</p></div><div className="flex gap-2"><button onClick={() => navigate("/routine")} className="bg-green-600 text-white px-4 py-2 rounded">My planner</button><LogoutButton /></div></div>{error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</p>}{message && <p className="bg-green-100 text-green-700 p-3 rounded mb-4">{message}</p>}<div className="grid lg:grid-cols-[320px_1fr] gap-6"><aside className="space-y-5"><form onSubmit={invite} className="bg-white rounded-xl shadow p-5 grid gap-3"><h2 className="font-semibold text-lg">Invite a caregiver</h2><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Their account email" className="border rounded px-3 py-2" /><select value={permission} onChange={(event) => setPermission(event.target.value)} className="border rounded px-3 py-2"><option value="viewer">Viewer</option><option value="caregiver">Caregiver</option></select><button className="bg-indigo-600 text-white rounded px-3 py-2">Send invitation</button></form><section className="bg-white rounded-xl shadow p-5"><h2 className="font-semibold text-lg mb-3">People I support</h2>{activeDependents.length === 0 ? <p className="text-gray-500 text-sm">No active connections yet.</p> : activeDependents.map((link) => <button key={link.id} onClick={() => selectDependent(link.owner_id)} className={`w-full text-left border rounded p-3 mb-2 ${String(link.owner_id) === selectedId ? "border-indigo-500 bg-indigo-50" : ""}`}><strong>{link.owner_name}</strong><span className="block text-sm text-gray-500">{link.owner_email} · {link.permission}</span></button>)}{pending.length > 0 && <div className="mt-5"><h3 className="font-medium mb-2">Pending invitations</h3>{pending.map((link) => <div key={link.id} className="border rounded p-3 mb-2"><p className="text-sm">{link.owner_name} invited you</p><button onClick={() => accept(link.id)} className="text-indigo-700 underline text-sm mt-1">Accept</button></div>)}</div>}</section></aside><main className="bg-white rounded-xl shadow p-5">{!dashboard ? <div className="min-h-64 flex items-center justify-center text-gray-500">Select a connected person to view their progress.</div> : <><h2 className="text-2xl font-semibold text-indigo-900 mb-5">Today’s support overview</h2><div className="grid sm:grid-cols-3 gap-3 mb-6"><Stat label="Routines" value={dashboard.routines.length} /><Stat label="Tasks" value={dashboard.routines.reduce((total, routine) => total + routine.tasks.length, 0)} /><Stat label="Pending reminders" value={dashboard.reminders.filter((reminder) => reminder.status === "pending").length} /></div><div className="grid md:grid-cols-2 gap-5"><section><h3 className="font-semibold mb-2">Routine progress</h3>{dashboard.routines.length === 0 ? <p className="text-gray-500">No routines yet.</p> : dashboard.routines.map((routine) => <article key={routine.id} className="border-b py-3"><h4 className="font-medium">{routine.name}</h4>{routine.tasks.map((task) => <p key={task.id} className={`text-sm mt-1 ${task.completed_at ? "text-green-700 line-through" : "text-gray-700"}`}>{task.completed_at ? "✓" : "○"} {task.title}{task.due_time ? ` · ${task.due_time}` : ""}</p>)}</article>)}</section><section><h3 className="font-semibold mb-2">Reminders</h3>{dashboard.reminders.length === 0 ? <p className="text-gray-500">No reminders.</p> : dashboard.reminders.map((reminder) => <p key={reminder.id} className="border-b py-3 text-sm"><strong>{reminder.text}</strong><span className="block text-gray-500">{reminder.remind_at} · {reminder.status}</span></p>)}</section></div></>}</main></div></div></div>;
+}
+function Stat({ label, value }) { return <div className="rounded-lg bg-indigo-50 p-4"><p className="text-sm text-indigo-700">{label}</p><p className="text-2xl font-bold text-indigo-900">{value}</p></div>; }

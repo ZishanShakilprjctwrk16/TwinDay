@@ -26,7 +26,8 @@ export default function Login() {
       if (!response.ok) throw new Error(result.error || "Unable to log in.");
 
       writeSession(result.user, result.token);
-      navigate(result.user.roles.includes("super_admin") ? "/admin" : "/roles");
+      if (result.user.preferred_role) localStorage.setItem("role", result.user.preferred_role);
+      navigate(result.user.roles.includes("super_admin") ? "/admin" : result.user.preferred_role === "caregiver" ? "/caregiver" : result.user.preferred_role ? "/home" : "/roles");
     } catch (submitError) {
       setError(submitError.message || "Unable to connect to the database.");
     } finally {
